@@ -1,6 +1,6 @@
 """Reproduce torch 2.8.0+cu129 numerics on newer torch, so MiniMax Music 3 / YuE2 seeds give the same songs.
 
-Importing this changes nothing. The "Torch 2.8 Exact Numerics" node returns a MODEL and CLIP whose sampling and
+Importing this changes nothing. The "Torch Legacy Numerics" node returns a MODEL and CLIP whose sampling and
 encode/generate run with these process-wide patches, which are removed again afterwards:
 - comfy-kitchen CUDA backend disabled (its fused kernels round differently from the eager path torch 2.8 used)
 - F.rms_norm on CUDA summed in torch 2.8's reduction order
@@ -39,7 +39,7 @@ def rms_norm(input, normalized_shape, weight=None, eps=None):
     key = (input.shape[-1], input.device.type)
     if key not in _warned:
         _warned.add(key)
-        logging.warning(f"Torch Legacy Support: rms_norm shape {tuple(input.shape)} on {input.device.type} not emulated, using native torch")
+        logging.warning(f"Torch Legacy: rms_norm shape {tuple(input.shape)} on {input.device.type} not emulated, using native torch")
     return _orig_rms_norm(input, normalized_shape, weight, eps)
 
 
@@ -65,7 +65,7 @@ def _set_active(active):
 
 
 @contextlib.contextmanager
-def torch28_numerics():
+def legacy_numerics():
     global _depth
     _depth += 1
     try:
@@ -80,22 +80,22 @@ def torch28_numerics():
 
 def _wrap(f):
     def wrapped(*args, **kwargs):
-        with torch28_numerics():
+        with legacy_numerics():
             return f(*args, **kwargs)
     return wrapped
 
 
 def _outer_sample(executor, *args, **kwargs):
-    with torch28_numerics():
+    with legacy_numerics():
         return executor(*args, **kwargs)
 
 
-class Torch28ExactNumerics(io.ComfyNode):
+class TorchLegacyNumerics(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(
-            node_id="Torch28ExactNumerics",
-            display_name="Torch 2.8 Exact Numerics",
+            node_id="TorchLegacyNumerics",
+            display_name="Torch Legacy Numerics",
             category="advanced/debug/model",
             description="Runs the model's sampling and the CLIP's text encode/generate with torch 2.8.0 CUDA numerics, so MiniMax Music3 / YuE2 seeds reproduce songs made on torch 2.8.",
             inputs=[
@@ -108,18 +108,18 @@ class Torch28ExactNumerics(io.ComfyNode):
     @classmethod
     def execute(cls, model, clip):
         model = model.clone()
-        model.add_wrapper_with_key(comfy.patcher_extension.WrappersMP.OUTER_SAMPLE, "torch_legacy_support", _outer_sample)
+        model.add_wrapper_with_key(comfy.patcher_extension.WrappersMP.OUTER_SAMPLE, "torch_legacy_numerics", _outer_sample)
         clip = clip.clone()
         for name in ("encode_token_weights", "generate"):
             clip.patcher.add_object_patch(name, _wrap(clip.patcher.get_model_object(name)))
         return io.NodeOutput(model, clip)
 
 
-class TorchLegacySupportExtension(ComfyExtension):
+class TorchLegacyExtension(ComfyExtension):
     @override
     async def get_node_list(self):
-        return [Torch28ExactNumerics]
+        return [TorchLegacyNumerics]
 
 
 async def comfy_entrypoint():
-    return TorchLegacySupportExtension()
+    return TorchLegacyExtension()

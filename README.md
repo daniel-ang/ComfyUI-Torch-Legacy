@@ -1,4 +1,4 @@
-# ComfyUI Torch Legacy Support
+# ComfyUI Torch Legacy
 
 Newer PyTorch releases (2.9+) changed the summation order of some CUDA reductions, and ComfyUI's comfy-kitchen fused kernels round differently from the eager path torch 2.8 used. The result: the same MiniMax Music 3 / YuE2 workflow and seed produces a different song after upgrading torch.
 
@@ -6,7 +6,7 @@ This node restores torch 2.8.0+cu129 numerics on newer torch so old seeds reprod
 
 ## Node
 
-**Torch 2.8 Exact Numerics** (`advanced/debug/model`)
+**Torch Legacy Numerics** (`advanced/debug/model`)
 
 Put it between your loader and the sampler / text encode:
 
@@ -26,7 +26,7 @@ ComfyUI-Manager: **Install via Git URL** with this repo's URL, or:
 
 ```
 cd ComfyUI/custom_nodes
-git clone https://github.com/<your-github-user>/ComfyUI-Torch-Legacy-Support
+git clone https://github.com/daniel-ang/ComfyUI-Torch-Legacy
 ```
 
 No extra pip packages are needed.

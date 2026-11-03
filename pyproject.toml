@@ -1,5 +1,5 @@
 [project]
-name = "comfyui-torch-legacy-support"
+name = "comfyui-torch-legacy"
 description = "Reproduce torch 2.8.0+cu129 CUDA numerics on newer torch, so MiniMax Music 3 / YuE2 seeds give the same songs as before the torch upgrade."
 version = "1.0.0"
 license = { file = "LICENSE" }
@@ -7,10 +7,10 @@ requires-python = ">=3.10"
 dependencies = []
 
 [project.urls]
-Repository = "https://github.com/<your-github-user>/ComfyUI-Torch-Legacy-Support"
+Repository = "https://github.com/daniel-ang/ComfyUI-Torch-Legacy"
 
 [tool.comfy]
-PublisherId = "<your-publisher-id>"
-DisplayName = "Torch Legacy Support"
+PublisherId = "daniel-ang"
+DisplayName = "Torch Legacy"
 Icon = ""
 requires-comfyui = ">=0.43.0"
